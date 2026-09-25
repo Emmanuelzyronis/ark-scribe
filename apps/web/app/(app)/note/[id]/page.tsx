@@ -118,11 +118,19 @@ function SectionEditor({ section, value, encounterId, onUpdate }: SectionEditorP
           </button>
         ) : (
           <div className="flex items-center gap-2">
-            <button onClick={() => { setText(value); setEditing(false) }} className="text-xs text-ark-text-muted hover:text-ark-error">
-              <X className="w-4 h-4" />
+            <button
+              onClick={() => { setText(value); setEditing(false) }}
+              className="text-xs text-ark-text-muted hover:text-ark-error"
+              aria-label="Cancel editing"
+            >
+              <X className="w-4 h-4" aria-hidden="true" />
             </button>
-            <button onClick={save} className="text-xs text-ark-primary hover:text-ark-accent">
-              <Check className="w-4 h-4" />
+            <button
+              onClick={save}
+              className="text-xs text-ark-primary hover:text-ark-accent"
+              aria-label="Save section"
+            >
+              <Check className="w-4 h-4" aria-hidden="true" />
             </button>
           </div>
         )}
@@ -270,14 +278,16 @@ export default function NotePage() {
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-ark-border bg-ark-surface flex-shrink-0">
         <div className="flex items-center gap-3">
-          <Link href="/dashboard">
-            <button className="p-1.5 rounded-input hover:bg-ark-surface-elevated text-ark-text-muted hover:text-ark-text-primary transition-all">
-              <ArrowLeft className="w-4 h-4" />
-            </button>
+          <Link
+            href="/dashboard"
+            className="p-1.5 rounded-input hover:bg-ark-surface-elevated text-ark-text-muted hover:text-ark-text-primary transition-all flex items-center justify-center"
+            aria-label="Back to dashboard"
+          >
+            <ArrowLeft className="w-4 h-4" aria-hidden="true" />
           </Link>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-base font-bold text-ark-text-primary">{encounter.title}</h1>
+              <h1 className="text-lg font-bold text-ark-text-primary">{encounter.title}</h1>
               <StatusBadge status={encounter.status} />
             </div>
             <p className="text-xs text-ark-text-muted">{formatDate(encounter.created_at)}</p>

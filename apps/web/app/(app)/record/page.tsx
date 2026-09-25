@@ -240,16 +240,19 @@ function RecordPageInner() {
               <>
                 <button
                   onClick={toggleMute}
+                  aria-label={muted ? 'Unmute microphone' : 'Mute microphone'}
+                  aria-pressed={muted}
                   className="w-12 h-12 rounded-full bg-ark-surface border border-ark-border flex items-center justify-center hover:border-ark-primary transition-all"
                 >
-                  {muted ? <MicOff className="w-5 h-5 text-ark-error" /> : <Mic className="w-5 h-5 text-ark-primary" />}
+                  {muted ? <MicOff className="w-5 h-5 text-ark-error" aria-hidden="true" /> : <Mic className="w-5 h-5 text-ark-primary" aria-hidden="true" />}
                 </button>
 
                 <button
                   onClick={stopRecording}
+                  aria-label="Stop recording"
                   className="w-14 h-14 rounded-full bg-ark-error flex items-center justify-center recording-pulse hover:bg-red-600 transition-colors"
                 >
-                  <Square className="w-5 h-5 text-white fill-white" />
+                  <Square className="w-5 h-5 text-white fill-white" aria-hidden="true" />
                 </button>
               </>
             )}
@@ -307,7 +310,17 @@ function RecordPageInner() {
 
 export default function RecordPage() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center h-screen bg-ark-bg text-ark-text-secondary">Loading...</div>}>
+    <Suspense fallback={
+      <div className="flex items-center justify-center h-screen bg-ark-bg">
+        <div className="flex items-center gap-3 text-ark-text-secondary">
+          <svg className="animate-spin h-5 w-5 text-ark-primary" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          <span>Preparing recorder...</span>
+        </div>
+      </div>
+    }>
       <RecordPageInner />
     </Suspense>
   )

@@ -110,8 +110,10 @@ export default function DashboardPage() {
       {/* Filters */}
       <div className="flex gap-3 mb-6 flex-wrap">
         <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ark-text-disabled" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ark-text-disabled" aria-hidden="true" />
+          <label htmlFor="encounter-search" className="sr-only">Search encounters</label>
           <input
+            id="encounter-search"
             type="text"
             placeholder="Search encounters..."
             value={search}
@@ -121,8 +123,10 @@ export default function DashboardPage() {
         </div>
 
         <div className="flex items-center gap-1">
-          <Filter className="w-4 h-4 text-ark-text-muted" />
+          <Filter className="w-4 h-4 text-ark-text-muted" aria-hidden="true" />
+          <label htmlFor="status-filter" className="sr-only">Filter by status</label>
           <select
+            id="status-filter"
             value={statusFilter}
             onChange={e => setStatusFilter(e.target.value)}
             className="px-3 py-2 rounded-input text-sm bg-ark-surface border border-ark-border text-ark-text-primary focus:outline-none focus:border-ark-primary transition-colors"
@@ -189,18 +193,20 @@ export default function DashboardPage() {
                   {(enc.status === 'draft' || enc.status === 'finalized') && (
                     <button
                       onClick={() => handleCopy(enc.id)}
+                      aria-label={`Copy note for ${enc.title || 'this encounter'}`}
                       title="Copy note"
                       className="p-1.5 rounded-input text-ark-text-muted hover:text-ark-primary hover:bg-ark-primary-muted transition-all"
                     >
-                      <Copy className="w-4 h-4" />
+                      <Copy className="w-4 h-4" aria-hidden="true" />
                     </button>
                   )}
                   <button
                     onClick={() => handleDelete(enc.id)}
-                    title="Delete"
+                    aria-label={`Delete ${enc.title || 'this encounter'}`}
+                    title="Delete encounter"
                     className="p-1.5 rounded-input text-ark-text-muted hover:text-ark-error hover:bg-red-900/20 transition-all"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-4 h-4" aria-hidden="true" />
                   </button>
                 </div>
               </div>
