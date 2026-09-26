@@ -25,6 +25,7 @@ const updateTranscriptSchema = z.object({
 
 const generateNoteSchema = z.object({
   transcript_text: z.string().min(10),
+  specialty: z.string().optional(),
 })
 
 const rewriteSectionSchema = z.object({
@@ -271,7 +272,7 @@ export default async function encounterRoutes(app: FastifyInstance) {
     if (enc.rows.length === 0) return reply.code(404).send({ error: 'Encounter not found' })
 
     try {
-      const soapResult = await generateSOAPNote(body.transcript_text)
+      const soapResult = await generateSOAPNote(body.transcript_text, body.specialty)
 
       const result = await db.query<DbSoapNote>(
         `INSERT INTO soap_notes (encounter_id, subjective, objective, assessment, plan, icd10_codes, medications, raw_claude_response, generation_model, generation_ms)

@@ -51,13 +51,17 @@ export interface SOAPNoteResult {
   generation_ms: number
 }
 
-export async function generateSOAPNote(transcript: string): Promise<SOAPNoteResult> {
+export async function generateSOAPNote(transcript: string, specialty?: string): Promise<SOAPNoteResult> {
   const startTime = Date.now()
+
+  const specialtyContext = specialty
+    ? `\n\nPhysician Specialty: ${specialty}. Tailor terminology, common diagnoses, and ICD-10 code suggestions to this specialty.`
+    : ''
 
   const message = await client.messages.create({
     model: MODEL,
     max_tokens: 2048,
-    system: SOAP_SYSTEM_PROMPT,
+    system: SOAP_SYSTEM_PROMPT + specialtyContext,
     messages: [
       {
         role: 'user',

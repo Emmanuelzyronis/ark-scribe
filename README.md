@@ -6,6 +6,28 @@
 
 ---
 
+## Demo
+
+> Interactive terminal demo — [view the full case study](https://emmanuelzyronis.vercel.app/work/ark-scribe)
+
+```text
+$ curl -s -X POST http://localhost:3001/api/note/generate \
+  -d '{"transcript":"Patient: 3-day productive cough, fever 38.4C, right chest pain.","specialty":"general-practice"}' | jq .note
+
+Generating SOAP note ...
+
+{
+  "subjective": "Patient presenting with 3-day productive cough, fever (38.4°C), and right-sided pleuritic chest discomfort.",
+  "objective": "Vitals: Temp 38.4°C, HR 92, SpO2 97% RA. Decreased breath sounds right lower lobe.",
+  "assessment": "Community-acquired pneumonia, right lower lobe (J18.1).",
+  "plan": "1. Amoxicillin-clavulanate 875/125mg BID x 5d\n2. CXR right lateral\n3. Follow-up 48h",
+  "icd10": ["J18.1", "R05.9", "R50.9"],
+  "generated_in_ms": 2847
+}
+```
+
+---
+
 ## The Problem
 
 200,000+ independent practice physicians in the US spend **2+ hours per day** on EHR documentation — equivalent to seeing 4 additional patients. Physician burnout sits at 53% globally, with documentation cited as the top driver. Nuance DAX and Abridge cost $300–500/month and are sold exclusively through enterprise hospital contracts, leaving solo and small-group practices with no accessible AI documentation tool.

@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { Mic, MicOff, Square, Zap, Clock } from 'lucide-react'
+import { Mic, MicOff, Square, Zap, Clock, CheckCircle } from 'lucide-react'
 import { encounters } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/components/ui/toast'
+import { useAuth } from '@/hooks/use-auth'
 import { formatDuration } from '@/lib/utils'
 
 interface TranscriptWord {
@@ -34,11 +35,44 @@ function RecordingWaveform({ isRecording }: { isRecording: boolean }) {
   )
 }
 
+const GENERATION_STEPS = [
+  'Redacting PHI…',
+  'Analyzing transcript…',
+  'Generating SOAP note…',
+  'Adding ICD-10 codes…',
+] as const
+
+function GenerationProgress({ step }: { step: number }) {
+  return (
+    <div className="flex flex-col gap-2 py-2">
+      {GENERATION_STEPS.map((label, i) => {
+        const done = i < step
+        const active = i === step
+        return (
+          <div key={label} className="flex items-center gap-3 text-sm">
+            {done ? (
+              <CheckCircle className="w-4 h-4 text-ark-primary flex-shrink-0" aria-hidden="true" />
+            ) : active ? (
+              <div className="w-4 h-4 rounded-full border-2 border-ark-primary border-t-transparent animate-spin flex-shrink-0" aria-hidden="true" />
+            ) : (
+              <div className="w-4 h-4 rounded-full border-2 border-ark-border flex-shrink-0" aria-hidden="true" />
+            )}
+            <span className={done ? 'text-ark-text-muted line-through' : active ? 'text-ark-text-primary font-medium' : 'text-ark-text-disabled'}>
+              {label}
+            </span>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 function RecordPageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const encounterId = searchParams?.get('id') || null
   const { success, error: showError, info } = useToast()
+  const { physician } = useAuth()
 
   const [isRecording, setIsRecording] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
@@ -46,6 +80,7 @@ function RecordPageInner() {
   const [words, setWords] = useState<TranscriptWord[]>([])
   const [rawText, setRawText] = useState('')
   const [generating, setGenerating] = useState(false)
+  const [generationStep, setGenerationStep] = useState(-1)
   const [currentId, setCurrentId] = useState(encounterId)
   const [muted, setMuted] = useState(false)
 
@@ -102,6 +137,10 @@ function RecordPageInner() {
   }, [])
 
   const startRecording = useCallback(async () => {
+    if (physician && !physician.specialty) {
+      info('Tip: add your specialty in Settings for more accurate notes.')
+    }
+
     try {
       // Create encounter if not already created
       let id = currentId
@@ -173,15 +212,27 @@ function RecordPageInner() {
     }
 
     setGenerating(true)
-    try {
-      // First finalize the transcript
-      await encounters.finalizeTranscript(currentId, { raw_text: rawText, words })
+    setGenerationStep(0)
 
-      // Then generate SOAP note
-      const res = await encounters.generateNote(currentId, rawText)
+    try {
+      // Step 0: Redact PHI + finalize transcript
+      await encounters.finalizeTranscript(currentId, { raw_text: rawText, words })
+      setGenerationStep(1)
+
+      // Steps 1-3 are inside the API call; animate them on the client side
+      const stepTimer1 = setTimeout(() => setGenerationStep(2), 800)
+      const stepTimer2 = setTimeout(() => setGenerationStep(3), 1800)
+
+      const res = await encounters.generateNote(currentId, rawText, physician?.specialty || undefined)
+
+      clearTimeout(stepTimer1)
+      clearTimeout(stepTimer2)
+      setGenerationStep(GENERATION_STEPS.length) // all done
+
       success(`SOAP note generated in ${Math.round((res.generation_ms || 0) / 100) / 10}s!`)
       router.push(`/note/${currentId}`)
     } catch (err) {
+      setGenerationStep(-1)
       showError((err as Error).message || 'Note generation failed')
     } finally {
       setGenerating(false)
@@ -201,7 +252,9 @@ function RecordPageInner() {
       <div className="flex items-center justify-between px-6 py-4 border-b border-ark-border bg-ark-surface">
         <div>
           <h1 className="text-lg font-bold text-ark-text-primary">New Recording</h1>
-          <p className="text-xs text-ark-text-muted">Encounter ID: {currentId || 'Not started'}</p>
+          <p className="text-xs text-ark-text-muted">
+            {currentId ? `Encounter #${currentId.slice(0, 6).toUpperCase()}` : 'Ready to record'}
+          </p>
         </div>
 
         <div className="flex items-center gap-4">
@@ -212,16 +265,21 @@ function RecordPageInner() {
             </div>
           )}
 
-          <Button
-            onClick={generateNote}
-            loading={generating}
-            disabled={isRecording || words.length === 0}
-            size="lg"
-            className="px-6"
-          >
-            <Zap className="w-4 h-4" />
-            Generate Note
-          </Button>
+          <div className="flex flex-col items-end gap-2">
+            <Button
+              onClick={generateNote}
+              loading={generating && generationStep < 0}
+              disabled={isRecording || words.length === 0 || generating}
+              size="lg"
+              className="px-6"
+            >
+              <Zap className="w-4 h-4" />
+              {generating ? 'Generating…' : 'Generate Note'}
+            </Button>
+            {generating && generationStep >= 0 && (
+              <GenerationProgress step={generationStep} />
+            )}
+          </div>
         </div>
       </div>
 
@@ -250,9 +308,9 @@ function RecordPageInner() {
                 <button
                   onClick={stopRecording}
                   aria-label="Stop recording"
-                  className="w-14 h-14 rounded-full bg-ark-error flex items-center justify-center recording-pulse hover:bg-red-600 transition-colors"
+                  className="w-20 h-20 rounded-full bg-ark-error flex items-center justify-center recording-pulse hover:bg-red-600 transition-colors shadow-lg"
                 >
-                  <Square className="w-5 h-5 text-white fill-white" aria-hidden="true" />
+                  <Square className="w-7 h-7 text-white fill-white" aria-hidden="true" />
                 </button>
               </>
             )}

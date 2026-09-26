@@ -98,10 +98,10 @@ export const encounters = {
   getTranscript: (id: string) =>
     request<{ transcript: unknown }>(`/api/encounters/${id}/transcript`),
 
-  generateNote: (id: string, transcript_text: string) =>
+  generateNote: (id: string, transcript_text: string, specialty?: string) =>
     request<{ soap_note: unknown; generation_ms: number }>(`/api/encounters/${id}/note/generate`, {
       method: 'POST',
-      body: JSON.stringify({ transcript_text }),
+      body: JSON.stringify({ transcript_text, ...(specialty ? { specialty } : {}) }),
     }),
 
   getNote: (id: string) =>

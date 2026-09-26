@@ -193,7 +193,29 @@ export default function SettingsPage() {
             {vocabLoading ? (
               [1, 2, 3].map(i => <div key={i} className="h-12 rounded-card skeleton" />)
             ) : vocabItems.length === 0 ? (
-              <p className="text-center text-ark-text-muted py-8">No custom vocabulary yet</p>
+              <div className="rounded-card bg-ark-surface border border-ark-border p-5">
+                <p className="text-sm font-medium text-ark-text-primary mb-2">No terms added yet</p>
+                <p className="text-xs text-ark-text-muted mb-4">
+                  Add specialty-specific terms to improve transcription accuracy. Click any example to pre-fill:
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { term: 'Lisinopril', phonetic_hint: 'lih-SIN-oh-pril', context_hint: 'ACE inhibitor' },
+                    { term: 'Metformin', phonetic_hint: 'met-FOR-min', context_hint: 'Type 2 DM' },
+                    { term: 'Troponin', phonetic_hint: 'TROP-oh-nin', context_hint: 'Cardiac marker' },
+                    { term: 'Dyspnea', phonetic_hint: 'DISP-nee-ah', context_hint: 'Shortness of breath' },
+                    { term: 'Tachycardia', phonetic_hint: 'tak-ih-KAR-dee-ah', context_hint: 'Fast heart rate' },
+                  ].map(ex => (
+                    <button
+                      key={ex.term}
+                      onClick={() => setVocabForm(f => ({ ...f, term: ex.term, phonetic_hint: ex.phonetic_hint, context_hint: ex.context_hint }))}
+                      className="px-3 py-1.5 rounded-badge border border-ark-border bg-ark-surface-elevated text-xs text-ark-text-secondary hover:border-ark-primary hover:text-ark-primary transition-colors"
+                    >
+                      {ex.term}
+                    </button>
+                  ))}
+                </div>
+              </div>
             ) : vocabItems.map(item => (
               <div key={item.id} className="flex items-center justify-between px-4 py-3 rounded-card bg-ark-surface border border-ark-border">
                 <div>
